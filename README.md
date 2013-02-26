@@ -1,3 +1,5 @@
+# This version is no longer being maintained, use [uber/multitransport-jsonrpc](https://github.com/uber/multitransport-jsonrpc)
+
 # Multitransport JSON-RPC Client and Server [![Build Status](https://travis-ci.org/dfellis/multitransport-jsonrpc.png?branch=master)](https://travis-ci.org/dfellis/multitransport-jsonrpc)
 
 *multitransport-jsonrpc* provides a JSON-RPC solution for both the traditional HTTP scenario as well as for persistent, raw TCP connections. It's designed as a collection of constructor functions where both the client and server are split into two components: a single outer object in charge of the JSON-RPC protocol and providing the API for your code to interact with, and multiple sets of inner transport objects that deal with the particular data transport layer you want to use and how precisely to configure it.
