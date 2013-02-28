@@ -6,8 +6,12 @@ exports.loopback = function(test) {
     var server = net.createServer(function(con) {
         var buffer = '';
         con.on('data', function(data) {
+            console.log('data');
             buffer += data.toString();
+            console.log(buffer);
             if(buffer.split('\0').length > 2) {
+                console.log('res');
+                console.log(buffer);
                 con.write(buffer);
                 con.end();
             }

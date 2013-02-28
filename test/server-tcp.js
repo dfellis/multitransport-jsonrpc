@@ -12,7 +12,7 @@ exports.loopback = function(test) {
         port: 11235,
         host: 'localhost'
     }, function() {
-        con.write(testJSON.length + '\0' + testJSON + '\0');
+        con.write(Buffer.byteLength(testJSON) + '\0' + testJSON + '\0');
     });
     var responseData = '';
     con.on('data', function(data) {
@@ -20,7 +20,7 @@ exports.loopback = function(test) {
         if(/\0/.test(responseData)) con.end();
     });
     con.on('end', function() {
-        test.equal(responseData, testJSON + '\0', 'Loopback functioned correctly');
+        test.equal(responseData, Buffer.byteLength(testJSON) + '\0' + testJSON + '\0', 'Loopback functioned correctly');
         tcpTransport.shutdown();
         test.done();
     });
@@ -37,16 +37,16 @@ exports.failure = function(test) {
         port: 12345,
         host: 'localhost'
     }, function() {
-        con.write(testJSON.length + '\0' + testJSON + '\0');
+        con.write(Buffer.byteLength(testJSON) + '\0' + testJSON + '\0');
     });
     var responseData = '';
     con.on('data', function(data) {
         responseData += data.toString();
-        if(/\0/.test(responseData)) con.end();
+        if(responseData.split('\0').length > 2) con.end();
     });
     con.on('end', function() {
         try {
-            var obj = JSON.parse(responseData.substring(0, responseData.length-1));
+            var obj = JSON.parse(responseData.substring(responseData.search('\0') + 1, responseData.length-1));
             test.equal(obj.error, "I have no idea what I'm doing.", 'error returned correctly');
         } catch(e) {
             // Nothing
