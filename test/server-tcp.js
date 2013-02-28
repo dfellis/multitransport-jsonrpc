@@ -12,7 +12,7 @@ exports.loopback = function(test) {
         port: 11235,
         host: 'localhost'
     }, function() {
-        con.write(testJSON + '\0');
+        con.write(testJSON.length + '\0' + testJSON + '\0');
     });
     var responseData = '';
     con.on('data', function(data) {
@@ -37,7 +37,7 @@ exports.failure = function(test) {
         port: 12345,
         host: 'localhost'
     }, function() {
-        con.write(testJSON + '\0');
+        con.write(testJSON.length + '\0' + testJSON + '\0');
     });
     var responseData = '';
     con.on('data', function(data) {
