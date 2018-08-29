@@ -29,7 +29,6 @@
     "jsonrpc-repl": "bin/jsonrpc-repl"
   },
   "dependencies": {
-    "lambda-js": "*",
     "commander": "*"
   },
   "devDependencies": {

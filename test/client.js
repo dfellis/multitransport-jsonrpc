@@ -1,22 +1,21 @@
-var jsonrpc = require('../lib/index')
-var HttpTransport = jsonrpc.transports.client.http
-var TcpTransport = jsonrpc.transports.client.tcp
-var JSONRPCclient = jsonrpc.client
-var shared = require('../lib/transports/shared/tcp')
-var l = require('lambda-js')
-var http = require('http')
-var net = require('net')
+const jsonrpc = require('../lib/index')
+const HttpTransport = jsonrpc.transports.client.http
+const TcpTransport = jsonrpc.transports.client.tcp
+const JSONRPCclient = jsonrpc.client
+const shared = require('../lib/transports/shared/tcp')
+const http = require('http')
+const net = require('net')
 
 exports.loopbackHttp = function(test) {
   test.expect(1)
-  var server = http.createServer(function(req, res) {
-    var buffer = ''
+  const server = http.createServer(function(req, res) {
+    let buffer = ''
     req.setEncoding('utf8')
     req.on('data', function(data) {
       buffer += data
     })
     req.on('end', function() {
-      var json
+      let json
       try {
         json = JSON.parse(buffer)
       } catch(e) { // eslint-disable-next-line no-empty
@@ -29,7 +28,7 @@ exports.loopbackHttp = function(test) {
     })
   })
   server.listen(22222)
-  var jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22222))
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22222))
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err, result) {
     test.equal('bar', result, 'Looped-back correctly')
@@ -41,19 +40,19 @@ exports.loopbackHttp = function(test) {
 
 exports.loopbackHttpWithCustomIdGenerator = function(test) {
   test.expect(2)
-  var id = 2
-  var generator = function() {
+  const id = 2
+  const generator = function() {
     return id
   }
-  var server = http.createServer(function(req, res) {
-    var buffer = ''
+  const server = http.createServer(function(req, res) {
+    let buffer = ''
     req.setEncoding('utf8')
     req.on('data', function(data) {
       buffer += data
     })
 
     req.on('end', function() {
-      var json
+      let json
       try {
         json = JSON.parse(buffer)
       } catch(e) { // eslint-disable-next-line no-empty
@@ -67,11 +66,11 @@ exports.loopbackHttpWithCustomIdGenerator = function(test) {
     })
   })
   server.listen(22722)
-  var options = {
+  const options = {
     autoRegister: false,
     idGenerator: generator
   }
-  var jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22722), options)
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22722), options)
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err, result) {
     test.equal('bar', result, 'Looped-back correctly')
@@ -83,17 +82,17 @@ exports.loopbackHttpWithCustomIdGenerator = function(test) {
 
 exports.loopbackHttpWithInvalidIdGenerator = function(test) {
   test.expect(2)
-  var server = http.createServer(function(req, res) {
+  const server = http.createServer(function(req, res) {
     req.on('end', function() {
       res.end()
     })
   })
   server.listen(22223)
-  var generator = function() {}
-  var options = {
+  const generator = function() {}
+  const options = {
     idGenerator: generator
   }
-  var jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22223), options)
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22223), options)
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err) {
     test.ok(!!err, 'error is thrown')
@@ -106,15 +105,15 @@ exports.loopbackHttpWithInvalidIdGenerator = function(test) {
 
 exports.failureTcp = function(test) {
   test.expect(2)
-  var server = net.createServer(function(con) {
-    var buffers = []
-    var bufferLen = 0
-    var messageLen = 0
+  const server = net.createServer(function(con) {
+    let buffers = []
+    let bufferLen = 0
+    let messageLen = 0
     con.on('data', function(data) {
       buffers.push(data)
       bufferLen += data.length
       if(messageLen === 0) messageLen = shared.getMessageLen(buffers)
-      var res, obj
+      let res, obj
       if(bufferLen - 4 >= messageLen) {
         while (messageLen && bufferLen - 4 >= messageLen && (res = shared.parseBuffer(buffers, messageLen))) {
           buffers = res[0]
@@ -123,14 +122,14 @@ exports.failureTcp = function(test) {
             id: obj && obj.id,
             error: 'I have no idea what I\'m doing.'
           }))
-          bufferLen = buffers.map(l('buffer', 'buffer.length')).reduce(l('fullLen, currLen', 'fullLen + currLen'), 0)
+          bufferLen = buffers.map(buffer => buffer.length).reduce((fullLen, currLen) => fullLen + currLen, 0)
           messageLen = shared.getMessageLen(buffers)
         }
       }
     })
   })
   server.listen(11111)
-  var jsonRpcClient = new JSONRPCclient(new TcpTransport({ host: 'localhost', port: 11111 }))
+  const jsonRpcClient = new JSONRPCclient(new TcpTransport({ host: 'localhost', port: 11111 }))
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err) {
     test.ok(!!err, 'error exists')
@@ -144,11 +143,11 @@ exports.failureTcp = function(test) {
 
 exports.invalidHttp = function(test) {
   test.expect(1)
-  var server = http.createServer(function(req, res) {
+  const server = http.createServer(function(req, res) {
     res.end('Hahahaha')
   })
   server.listen(23232)
-  var jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 23232))
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 23232))
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err) {
     test.ok(err instanceof Error, 'received the error response from the client library')
@@ -158,7 +157,7 @@ exports.invalidHttp = function(test) {
 
 exports.serverDownHttp = function(test) {
   test.expect(1)
-  var jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 23232))
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 23232))
   jsonRpcClient.register('foo')
   jsonRpcClient.foo('bar', function(err) {
     test.ok(err instanceof Error, 'received the error response from the client library')

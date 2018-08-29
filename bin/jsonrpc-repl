@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-var repl = require('repl')
-var commander = require('commander')
-var l = require('lambda-js')
-var jsonrpc = require('../lib/index')
-var Client = jsonrpc.client
-var TcpTransport = jsonrpc.transports.client.tcp
-var HttpTransport = jsonrpc.transports.client.http
+const repl = require('repl')
+const commander = require('commander')
+const jsonrpc = require('../lib/index')
+const Client = jsonrpc.client
+const TcpTransport = jsonrpc.transports.client.tcp
+const HttpTransport = jsonrpc.transports.client.http
 
 commander
   .option('-s, --server <hostname>', 'The hostname the server is located on. (Default: "localhost")', 'localhost')
@@ -15,16 +14,16 @@ commander
   .option('--path <path>', 'The path part of the URL, e.g. "/rpc" (Default: "/")', '/')
   .parse(process.argv)
 
-var Transport = commander.tcp ? TcpTransport : HttpTransport
+const Transport = commander.tcp ? TcpTransport : HttpTransport
 
 new Client(new Transport(commander.server, commander.port, { path: commander.path }), {}, function(client) {
   /* eslint-disable no-console */
   console.log('Connected to ' + commander.server + ':' + commander.port + commander.path + ' over ' + (commander.tcp ? 'TCP' : 'HTTP'))
   console.log('The server reported the following methods:')
-  console.log(Object.getOwnPropertyNames(client).filter(l('name', 'name !== "transport"')).join(', '))
+  console.log(Object.getOwnPropertyNames(client).filter(name => name !== 'transport').join(', '))
   console.log('Access them with `rpc.foo(arg1, arg2, callbackFunction)`')
   /* eslint-enable no-console */
-  var r = repl.start({ prompt: 'jsonrpc> ', useGlobal: true })
+  const r = repl.start({ prompt: 'jsonrpc> ', useGlobal: true })
   r.context.rpc = client
   r.on('exit', process.exit.bind(process))
 })
