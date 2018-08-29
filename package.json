@@ -29,25 +29,26 @@
     "jsonrpc-repl": "bin/jsonrpc-repl"
   },
   "dependencies": {
-    "queue-flow": "<0.7.x",
     "lambda-js": "*",
     "commander": "*"
   },
   "devDependencies": {
     "async": "*",
-    "nodeunit": "*",
+    "coveralls": "^2.11.0",
     "docco-husky": "*",
+    "eslint": "^5.4.0",
     "express": "3.x",
-    "jshint": "*",
-    "istanbul": "^0.2.16",
-    "coveralls": "^2.11.0"
+    "nodeunit": "*",
+    "nyc": "^13.0.1"
   },
   "scripts": {
     "realpublish": "./prepublish.sh",
-    "jshint": "test/jshint.sh",
-    "test": "npm run jshint && istanbul --print=none cover nodeunit test/*.js && istanbul report text",
-    "cover": "istanbul cover --report none --print detail nodeunit test/*.js",
-    "view-cover": "istanbul report html && open ./coverage/index.html",
-    "coveralls": "cat coverage/lcov.info | coveralls"
+    "eslint": "eslint ./bin/jsonrpc-repl ./lib/*.js ./lib/**/*.js ./test/*.js ./test/**/*.js",
+    "test": "npm run eslint && nyc nodeunit test/*.js",
+    "view-cover": "nyc report --reporter=html && open ./coverage/index.html",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }
