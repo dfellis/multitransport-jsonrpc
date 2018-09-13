@@ -164,3 +164,35 @@ exports.serverDownHttp = function(test) {
     test.done()
   })
 }
+
+exports.loopbackHttpPromise = async (test) => {
+  test.expect(1)
+  const server = http.createServer(function(req, res) {
+    let buffer = ''
+    req.setEncoding('utf8')
+    req.on('data', function(data) {
+      buffer += data
+    })
+    req.on('end', function() {
+      let json
+      try {
+        json = JSON.parse(buffer)
+      } catch(e) { // eslint-disable-next-line no-empty
+      }
+      res.write(JSON.stringify({
+        id: json && json.id,
+        result: json && json.params
+      }))
+      res.end()
+    })
+  })
+  server.listen(22224)
+  const jsonRpcClient = new JSONRPCclient(new HttpTransport('localhost', 22224))
+  jsonRpcClient.registerPromise('foo')
+  const result = await jsonRpcClient.foo('bar')
+  test.equal('bar', result, 'Looped-back correctly')
+  server.close(function() {
+    test.done()
+  })
+}
+

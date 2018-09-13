@@ -248,7 +248,6 @@ function perf(testString, test) {
     loopbackClient.register('loopback')
     var loopbackCount = 0, loopbackStart = Date.now(), loopbackEnd
     for(var i = 0; i < numMessages; i++) {
-      /* jshint loopfunc: true */
       loopbackClient.loopback(i, function() {
         loopbackCount++
         if(loopbackCount === numMessages) {
@@ -269,7 +268,6 @@ function perf(testString, test) {
   function more() {
     var childProcCount = 0, childProcStart = Date.now(), childProcEnd
     for(var i = 0; i < numMessages; i++) {
-      /* jshint loopfunc: true */
       childProcClient.loopback(i, function() {
         childProcCount++
         if(childProcCount === numMessages) {
@@ -290,7 +288,6 @@ function perf(testString, test) {
     httpClient.register('loopback')
     var httpCount = 0, httpStart = new Date().getTime(), httpEnd
     for(var i = 0; i < numMessages; i++) {
-      /* jshint loopfunc: true */
       httpClient.loopback(i, function() {
         httpCount++
         if(httpCount === numMessages) {
@@ -311,7 +308,6 @@ function perf(testString, test) {
   tcpClient.register('loopback')
   var tcpCount = 0, tcpStart = new Date().getTime(), tcpEnd
   for(var i = 0; i < numMessages; i++) {
-    /* jshint loopfunc: true */
     tcpClient.loopback(testString || i, function() {
       tcpCount++
       if(tcpCount === numMessages) {
