@@ -44,7 +44,7 @@
     "realpublish": "./prepublish.sh",
     "eslint": "eslint ./bin/jsonrpc-repl ./lib/*.js ./lib/**/*.js ./test/*.js ./test/**/*.js",
     "test": "npm run eslint && nyc nodeunit test/*.js",
-    "view-cover": "nyc report --reporter=html && open ./coverage/index.html",
+    "view-cover": "nyc report --reporter=html && if command -v xdg-open; then xdg-open ./coverage/index.html; else open ./coverage/index.html; fi",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "engines": {
