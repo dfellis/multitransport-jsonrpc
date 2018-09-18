@@ -292,3 +292,38 @@ exports.blockingFunction = (test) => {
   req.write(testJSON)
   req.end()
 }
+
+exports.asyncFunction = (test) => {
+  test.expect(3)
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32766), {})
+  jsonRpcServer.registerPromise('answerToUltimateQuestion', async () => 42)
+  const testJSON = JSON.stringify({
+    id: 27,
+    method: 'answerToUltimateQuestion',
+    params: []
+  })
+  const req = http.request({
+    hostname: 'localhost',
+    port: 32766,
+    path: '/',
+    method: 'POST'
+  }, (res) => {
+    res.setEncoding('utf8')
+    let resultString = ''
+    res.on('data', (data) => resultString += data)
+    res.on('end', () => {
+      let resultObj
+      try {
+        resultObj = JSON.parse(resultString)
+      } catch(e) {
+        // Do nothing, test will fail
+      }
+      test.equal(resultObj.id, 27, 'The JSON-RPC server sent back the correct ID')
+      test.equal(resultObj.result, 42, 'The answer to life, the universe, and everything')
+      test.ok(resultObj.error === undefined, 'The error property is not defined')
+      jsonRpcServer.shutdown(test.done.bind(test))
+    })
+  })
+  req.write(testJSON)
+  req.end()
+}
