@@ -1,38 +1,34 @@
-var jsonrpc = require('../lib/index')
-var HttpTransport = jsonrpc.transports.server.http
-var TcpTransport = jsonrpc.transports.server.tcp
-var shared = require('../lib/transports/shared/tcp')
-var JSONRPCserver = jsonrpc.server
-var ErrorCode = jsonrpc.errorcode
-var http = require('http')
-var net = require('net')
+const jsonrpc = require('../lib/index')
+const HttpTransport = jsonrpc.transports.server.http
+const TcpTransport = jsonrpc.transports.server.tcp
+const shared = require('../lib/transports/shared/tcp')
+const JSONRPCserver = jsonrpc.server
+const ErrorCode = jsonrpc.errorcode
+const http = require('http')
+const net = require('net')
 
-exports.loopbackHttp = function(test) {
+exports.loopbackHttp = (test) => {
   test.expect(4)
-  var jsonRpcServer = new JSONRPCserver(new HttpTransport(65432), {
-    loopback: function(arg1, callback) {
-      callback(null, arg1)
-    }
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32431), {
+    loopback: (arg1, callback) => callback(null, arg1)
   })
-  var testJSON = JSON.stringify({
+  const testJSON = JSON.stringify({
     id: 1,
     method: 'loopback',
     params: [{ hello: 'world' }]
   })
-  var req = http.request({
+  const req = http.request({
     hostname: 'localhost',
-    port: 65432,
+    port: 32431,
     path: '/',
     method: 'POST'
-  }, function(res) {
+  }, (res) => {
     res.setEncoding('utf8')
-    var resultString = ''
-    res.on('data', function(data) {
-      resultString += data
-    })
-    res.on('end', function() {
+    let resultString = ''
+    res.on('data', (data) => resultString += data)
+    res.on('end', () => {
       test.equal(200, res.statusCode, 'The http transport provided an OK status code')
-      var resultObj
+      let resultObj
       try {
         resultObj = JSON.parse(resultString)
       } catch(e) {
@@ -49,33 +45,31 @@ exports.loopbackHttp = function(test) {
   req.end()
 }
 
-exports.loopbackHttp = function(test) {
+exports.loopbackHttp = (test) => {
   test.expect(5)
-  var jsonRpcServer = new JSONRPCserver(new HttpTransport(65432), {
-    loopback: function(arg1, callback) {
-      callback(null, arg1)
-    }
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32432), {
+    loopback: (arg1, callback) => callback(null, arg1)
   })
-  var testJSON = JSON.stringify({
+  const testJSON = JSON.stringify({
     jsonrpc: '2.0',
     id: 1,
     method: 'loopback',
     params: [{ hello: 'world' }]
   })
-  var req = http.request({
+  const req = http.request({
     hostname: 'localhost',
-    port: 65432,
+    port: 32432,
     path: '/',
     method: 'POST'
-  }, function(res) {
+  }, (res) => {
     res.setEncoding('utf8')
-    var resultString = ''
-    res.on('data', function(data) {
+    let resultString = ''
+    res.on('data', (data) => {
       resultString += data
     })
-    res.on('end', function() {
+    res.on('end', () => {
       test.equal(200, res.statusCode, 'The http transport provided an OK status code')
-      var resultObj
+      let resultObj
       try {
         resultObj = JSON.parse(resultString)
       } catch(e) {
@@ -93,14 +87,12 @@ exports.loopbackHttp = function(test) {
   req.end()
 }
 
-exports.loopbackHttpBatch = function(test) {
+exports.loopbackHttpBatch = (test) => {
   test.expect(11)
-  var jsonRpcServer = new JSONRPCserver(new HttpTransport(65123), {
-    loopback: function(arg1, callback) {
-      callback(null, arg1)
-    }
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32123), {
+    loopback: (arg1, callback) => callback(null, arg1),
   })
-  var testJSON = JSON.stringify([
+  const testJSON = JSON.stringify([
     {
       id: 1,
       method: 'loopback',
@@ -117,27 +109,27 @@ exports.loopbackHttpBatch = function(test) {
       params: [{ hello: 'batch world' }]
     }
   ])
-  var req = http.request({
+  const req = http.request({
     hostname: 'localhost',
-    port: 65123,
+    port: 32123,
     path: '/',
     method: 'POST'
-  }, function(res) {
+  }, (res) => {
     res.setEncoding('utf8')
-    var resultString = ''
-    res.on('data', function(data) {
+    let resultString = ''
+    res.on('data', (data) => {
       resultString += data
     })
-    res.on('end', function() {
+    res.on('end', () => {
       test.equal(200, res.statusCode, 'The http transport provided an OK status code')
-      var resultObj
+      let resultObj
       try {
         resultObj = JSON.parse(resultString)
       } catch(e) {
         // Do nothing, test will fail
       }
       test.equal(Array.isArray(resultObj), true, 'The batch response is array')
-      var obj
+      let obj
       {
         obj = resultObj[0]
         test.equal(obj.id, 1, 'The JSON-RPC server sent back the same ID')
@@ -164,33 +156,30 @@ exports.loopbackHttpBatch = function(test) {
   req.end()
 }
 
-exports.failureTcp = function(test) {
+exports.failureTcp = (test) => {
   test.expect(4)
-  var jsonRpcServer = new JSONRPCserver(new TcpTransport(64863), {
-    failure: function(arg1, callback) {
-      callback(new Error('I have no idea what I\'m doing'))
-    }
+  const jsonRpcServer = new JSONRPCserver(new TcpTransport(32863), {
+    failure: (arg1, callback) => callback(new Error('I have no idea what I\'m doing')),
   })
-  var con = net.connect({
-    port: 64863,
+  const con = net.connect({
+    port: 32863,
     host: 'localhost'
-  }, function() {
-    con.write(shared.formatMessage({
-      id: 1,
-      method: 'failure',
-      params: [{ hello: 'world' }]
-    }))
-  })
-  var buffers = [], bufferLen = 0, messageLen = 0
-  con.on('data', function(data) {
+  }, () => con.write(shared.formatMessage({
+    id: 1,
+    method: 'failure',
+    params: [{ hello: 'world' }]
+  })))
+  const buffers = []
+  let bufferLen = 0, messageLen = 0
+  con.on('data', (data) => {
     buffers.push(data)
     bufferLen += data.length
-    if(messageLen === 0) messageLen = shared.getMessageLen(buffers)
-    if(bufferLen === messageLen + 4) con.end()
+    if (messageLen === 0) messageLen = shared.getMessageLen(buffers)
+    if (bufferLen === messageLen + 4) con.end()
   })
-  con.on('end', function() {
+  con.on('end', () => {
     try {
-      var res = shared.parseBuffer(buffers, messageLen)
+      const res = shared.parseBuffer(buffers, messageLen)
       test.equal(res[1].id, 1, 'The JSON-RPC server sent back the same ID')
       test.equal(res[1].error.code, ErrorCode.internalError)
       test.equal(res[1].error.message, 'I have no idea what I\'m doing', 'Returns the error as an error')
@@ -203,27 +192,25 @@ exports.failureTcp = function(test) {
   })
 }
 
-exports.nonexistentMethod = function(test) {
+exports.nonexistentMethod = (test) => {
   test.expect(4)
-  var jsonRpcServer = new JSONRPCserver(new HttpTransport(65111), {})
-  var testJSON = JSON.stringify({
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32111), {})
+  const testJSON = JSON.stringify({
     id: 25,
     method: 'nonexistent',
     params: []
   })
-  var req = http.request({
+  const req = http.request({
     hostname: 'localhost',
-    port: 65111,
+    port: 32111,
     path: '/',
     method: 'POST'
-  }, function(res) {
+  }, (res) => {
     res.setEncoding('utf8')
-    var resultString = ''
-    res.on('data', function(data) {
-      resultString += data
-    })
-    res.on('end', function() {
-      var resultObj
+    let resultString = ''
+    res.on('data', (data) => resultString += data)
+    res.on('end', () => {
+      let resultObj
       try {
         resultObj = JSON.parse(resultString)
       } catch(e) {
@@ -240,23 +227,21 @@ exports.nonexistentMethod = function(test) {
   req.end()
 }
 
-exports.noncompliantJSON = function(test) {
+exports.noncompliantJSON = (test) => {
   test.expect(4)
-  var jsonRpcServer = new JSONRPCserver(new HttpTransport(64123), {})
-  var testJSON = JSON.stringify({ hello: 'world' })
-  var req = http.request({
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32123), {})
+  const testJSON = JSON.stringify({ hello: 'world' })
+  const req = http.request({
     hostname: 'localhost',
-    port: 64123,
+    port: 32123,
     path: '/',
     method: 'POST'
-  }, function(res) {
+  }, (res) => {
     res.setEncoding('utf8')
-    var resultString = ''
-    res.on('data', function(data) {
-      resultString += data
-    })
-    res.on('end', function() {
-      var resultObj
+    let resultString = ''
+    res.on('data', (data) => resultString += data)
+    res.on('end', () => {
+      let resultObj
       try {
         resultObj = JSON.parse(resultString)
       } catch(e) {
@@ -266,6 +251,41 @@ exports.noncompliantJSON = function(test) {
       test.equal(resultObj.error.code, ErrorCode.invalidRequest)
       test.equal(resultObj.error.message, 'Did not receive valid JSON-RPC data.', 'The JSON-RPC server returned the expected error message.')
       test.ok(resultObj.result === undefined, 'The result property is not defined on error response')
+      jsonRpcServer.shutdown(test.done.bind(test))
+    })
+  })
+  req.write(testJSON)
+  req.end()
+}
+
+exports.blockingFunction = (test) => {
+  test.expect(3)
+  const jsonRpcServer = new JSONRPCserver(new HttpTransport(32767), {})
+  jsonRpcServer.register('answerToUltimateQuestion', jsonRpcServer.blocking(() => 42))
+  const testJSON = JSON.stringify({
+    id: 26,
+    method: 'answerToUltimateQuestion',
+    params: []
+  })
+  const req = http.request({
+    hostname: 'localhost',
+    port: 32767,
+    path: '/',
+    method: 'POST'
+  }, (res) => {
+    res.setEncoding('utf8')
+    let resultString = ''
+    res.on('data', (data) => resultString += data)
+    res.on('end', () => {
+      let resultObj
+      try {
+        resultObj = JSON.parse(resultString)
+      } catch(e) {
+        // Do nothing, test will fail
+      }
+      test.equal(resultObj.id, 26, 'The JSON-RPC server sent back the correct ID')
+      test.equal(resultObj.result, 42, 'The answer to life, the universe, and everything')
+      test.ok(resultObj.error === undefined, 'The error property is not defined')
       jsonRpcServer.shutdown(test.done.bind(test))
     })
   })
