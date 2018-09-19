@@ -32,7 +32,6 @@
     "commander": "*"
   },
   "devDependencies": {
-    "async": "*",
     "coveralls": "^2.11.0",
     "docco-husky": "*",
     "eslint": "^5.4.0",
