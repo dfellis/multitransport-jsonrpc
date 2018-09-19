@@ -30,46 +30,46 @@ If you want to use the ``jsonrpc-repl`` binary, also
 ## Library Usage
 
 ```js
-var jsonrpc = require('multitransport-jsonrpc'); // Get the multitransport JSON-RPC suite
+const jsonrpc = require('multitransport-jsonrpc'); // Get the multitransport JSON-RPC suite
 
-var Server = jsonrpc.server; // The server constructor function
-var Client = jsonrpc.client; // The client constructor function
+const Server = jsonrpc.server; // The server constructor function
+const Client = jsonrpc.client; // The client constructor function
 
-var ServerHttp = jsonrpc.transports.server.http; // The server HTTP transport constructor function
-var ServerTcp = jsonrpc.transports.server.tcp; // The server TCP transport constructor function
-var ServerMiddleware = jsonrpc.transports.server.middleware; // The server Middleware transport constructor function (for Express/Connect)
-var Loopback = jsonrpc.transports.shared.loopback; // The Loopback transport for mocking clients/servers in tests
+const ServerHttp = jsonrpc.transports.server.http; // The server HTTP transport constructor function
+const ServerTcp = jsonrpc.transports.server.tcp; // The server TCP transport constructor function
+const ServerMiddleware = jsonrpc.transports.server.middleware; // The server Middleware transport constructor function (for Express/Connect)
+const Loopback = jsonrpc.transports.shared.loopback; // The Loopback transport for mocking clients/servers in tests
 
-var ClientHttp = jsonrpc.transports.client.http;
-var ClientTcp = jsonrpc.transports.client.tcp;
+const ClientHttp = jsonrpc.transports.client.http;
+const ClientTcp = jsonrpc.transports.client.tcp;
 
 // Setting up servers
-var jsonRpcHttpServer = new Server(new ServerHttp(8000), {
+const jsonRpcHttpServer = new Server(new ServerHttp(8000), {
     loopback: function(obj, callback) { callback(undefined, obj); }
 });
 
-var jsonRpcTcpServer = new Server(new ServerTcp(8001), {
+const jsonRpcTcpServer = new Server(new ServerTcp(8001), {
     loopback: function(obj, callback) { callback(undefined, obj); }
 });
 
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 app.use(express.bodyParser());
-var jsonRpcMiddlewareServer = new Server(new ServerMiddleware(), {
+const jsonRpcMiddlewareServer = new Server(new ServerMiddleware(), {
     loopback: function(obj, callback) { callback(undefined, obj); }
 });
 app.use('/rpc', jsonRpcMiddlewareServer.transport.middleware);
 app.listen(8002);
 
-var loopback = new Loopback();
-var jsonRpcLoopbackServer = new Server(loopback, {
+const loopback = new Loopback();
+const jsonRpcLoopbackServer = new Server(loopback, {
     loopback: function(obj, callback) { callback(undefined, obj); }
 });
 
 // Setting up and using the clients
 
 // Either explicitly register the remote methods
-var jsonRpcHttpClient = new Client(new ClientHttp('localhost', 8000));
+const jsonRpcHttpClient = new Client(new ClientHttp('localhost', 8000));
 jsonRpcHttpClient.register('loopback');
 jsonRpcHttpClient.loopback('foo', function(err, val) {
     console.log(val); // Prints 'foo'
@@ -82,7 +82,7 @@ new Client(new ClientTcp('localhost', 8001), {}, function(jsonRpcTcpClient) {
     });
 });
 
-var jsonRpcExpressClient = new Client(new ClientHttp('localhost', 8002, { path: '/rpc' }));
+const jsonRpcExpressClient = new Client(new ClientHttp('localhost', 8002, { path: '/rpc' }));
 jsonRpcExpressClient.register('loopback');
 jsonRpcExpressClient.loopback('foo', function(err, val) {
     console.log(val); // Prints 'foo'
@@ -95,11 +95,11 @@ new Client(loopback, {}, function(jsonRpcLoopbackClient) {
 });
 
 // The server can run multiple transports simultaneously, too
-var jsonRpcMultitransportServer = new Server([new ServerTcp(8000), new ServerHttp(8080)], {
+const jsonRpcMultitransportServer = new Server([new ServerTcp(8000), new ServerHttp(8080)], {
     loopback: function(obj, callback) { callback(undefined, obj); }
 });
-var client1 = new Client(new ClientTcp('localhost', 8000));
-var client2 = new Client(new ClientHttp('localhost', 8080));
+const client1 = new Client(new ClientTcp('localhost', 8000));
+const client2 = new Client(new ClientHttp('localhost', 8080));
 ```
 
 ### Constructor Function Parameters
@@ -297,8 +297,8 @@ function foo(bar, baz, callback) {
 Alternately, the JSON-RPC server provides a ``blocking`` method that can be used to mark a function as a blocking function that takes no callback. Then the result is returned and errors are thrown.
 
 ```js
-var blocking = jsonrpc.server.blocking;
-var blockingFoo = blocking(function(bar, baz) {
+const blocking = jsonrpc.server.blocking;
+const blockingFoo = blocking(function(bar, baz) {
     if(!baz) {
         throw new Error('no baz!');
     } else {

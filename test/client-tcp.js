@@ -1,51 +1,50 @@
-var jsonrpc = require('../lib/index')
-var TcpTransport = jsonrpc.transports.client.tcp
-var shared = require('../lib/transports/shared/tcp')
-var net = require('net')
-var async = require('async')
+const jsonrpc = require('../lib/index')
+const TcpTransport = jsonrpc.transports.client.tcp
+const shared = require('../lib/transports/shared/tcp')
+const net = require('net')
 
-var Server = jsonrpc.server
-var ServerTcp = jsonrpc.transports.server.tcp
-var Client = jsonrpc.client
-var ClientTcp = jsonrpc.transports.client.tcp
+const Server = jsonrpc.server
+const ServerTcp = jsonrpc.transports.server.tcp
+const Client = jsonrpc.client
+const ClientTcp = jsonrpc.transports.client.tcp
 
-exports.loopback = function(test) {
+exports.loopback = (test) => {
   test.expect(1)
-  var server = net.createServer(function(con) {
-    var buffer = new Buffer('')
-    var messageLen = 0
-    con.on('data', function(data) {
+  const server = net.createServer((con) => {
+    let buffer = new Buffer('')
+    let messageLen = 0
+    con.on('data', (data) => {
       buffer = Buffer.concat([buffer, data])
-      if(messageLen === 0) messageLen = shared.getMessageLen([data])
-      if(buffer.length === messageLen + 4) {
+      if (messageLen === 0) messageLen = shared.getMessageLen([data])
+      if (buffer.length === messageLen + 4) {
         con.write(buffer)
         con.end()
       }
     })
   })
   server.listen(23456)
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
     // eslint-disable-next-line no-console
     logger: console.log
   })
-  tcpTransport.request('foo', function(result) {
+  tcpTransport.request('foo', (result) => {
     test.equal('foo', result, 'loopback worked correctly')
-    tcpTransport.shutdown(function() {
+    tcpTransport.shutdown(() => {
       server.close(test.done.bind(test))
     })
   })
 }
 
-exports.sweep = function(test) {
+exports.sweep = (test) => {
   test.expect(2)
-  var server = net.createServer(function(con) {
-    var buffer = new Buffer('')
-    var messageLen = 0
-    con.on('data', function(data) {
+  const server = net.createServer((con) => {
+    let buffer = new Buffer('')
+    let messageLen = 0
+    con.on('data', (data) => {
       buffer = Buffer.concat([buffer, data])
-      if(messageLen === 0) messageLen = shared.getMessageLen([data])
-      if(buffer.length === messageLen + 4) {
-        setTimeout(function() {
+      if (messageLen === 0) messageLen = shared.getMessageLen([data])
+      if (buffer.length === messageLen + 4) {
+        setTimeout(() => {
           con.write(buffer)
           con.end()
         }, 400)
@@ -53,54 +52,54 @@ exports.sweep = function(test) {
     })
   })
   server.listen(23457)
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23457 }, { timeout: 100 })
-  tcpTransport.request('foo', function(err, result) {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23457 }, { timeout: 100 })
+  tcpTransport.request('foo', (err, result) => {
     test.ok(!!err, 'should receive a timeout error')
-    if(result) test.ok(false, 'this should never run')
+    if (result) test.ok(false, 'this should never run')
   })
-  setTimeout(function() {
+  setTimeout(() => {
     test.ok(true, 'this should always run')
-    tcpTransport.shutdown(function() {
+    tcpTransport.shutdown(() => {
       server.close(test.done.bind(test))
     })
   }, 1000)
 }
 
-exports.glitchedConnection = function(test) {
+exports.glitchedConnection = (test) => {
   test.expect(3)
-  var con
-  var serverFunc = function(c) {
+  let con
+  const serverFunc = (c) => {
     con = c
-    var buffer = new Buffer('')
-    var messageLen = 0
-    c.on('data', function(data) {
+    let buffer = new Buffer('')
+    let messageLen = 0
+    c.on('data', (data) => {
       buffer = Buffer.concat([buffer, data])
-      if(messageLen === 0) messageLen = shared.getMessageLen([data])
-      if(buffer.length === messageLen + 4) {
-        setTimeout(function() {
-          if(con) {
+      if (messageLen === 0) messageLen = shared.getMessageLen([data])
+      if (buffer.length === messageLen + 4) {
+        setTimeout(() => {
+          if (con) {
             con.write(buffer)
             con.end()
           }
         }, 400)
       }
     })
-    c.on('end', function() {
+    c.on('end', () => {
       con = undefined
     })
   }
-  var server = net.createServer(serverFunc)
+  let server = net.createServer(serverFunc)
   server.listen(23458)
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23458 })
-  tcpTransport.request({'id': 'foo'}, function(result) {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23458 })
+  tcpTransport.request({'id': 'foo'}, (result) => {
     test.equal(JSON.stringify({'id': 'foo'}), JSON.stringify(result), 'eventually received the response')
-    tcpTransport.shutdown(function() {
+    tcpTransport.shutdown(() => {
       server.close(test.done.bind(test))
     })
   })
 
   // Kill the original server to simulate an error
-  setTimeout(function() {
+  setTimeout(() => {
     test.ok(true, 'server was killed')
     con.destroy()
     con = undefined
@@ -108,19 +107,19 @@ exports.glitchedConnection = function(test) {
   }, 50)
 
   // Start a new server to reconnect to
-  setTimeout(function() {
+  setTimeout(() => {
     test.ok(true, 'new server created to actually handle the request')
     server = net.createServer(serverFunc)
     server.listen(23458)
   }, 100)
 }
 
-exports.stopBuffering = function(test) {
+exports.stopBuffering = (test) => {
   test.expect(6)
-  var con, server
+  let con, server
   // Create a client pointed to nowhere, telling it to stop trying requests after a while
   // (but continue attempting to connect to the server)
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23459 }, {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23459 }, {
     timeout: 2*1000,
     stopBufferingAfter: 5*1000
   })
@@ -130,25 +129,25 @@ exports.stopBuffering = function(test) {
     test.equal(result.error, 'Request Timed Out', 'time out error message received')
   })
   // Later messages will be immediately killed
-  setTimeout(function() {
-    tcpTransport.request({id: 'foo'}, function(result) {
+  setTimeout(() => {
+    tcpTransport.request({id: 'foo'}, (result) => {
       test.ok(!!result.error, 'Still can\'t connect to the nonexistent server')
       test.equal(result.error, 'Connection Unavailable', 'immediately blocked by the maximum timeout time for the server')
-      var serverFunc = function(c) {
+      const serverFunc = (c) => {
         con = c
-        var buffer = new Buffer('')
-        var messageLen = 0
-        c.on('data', function(data) {
+        let buffer = new Buffer('')
+        let messageLen = 0
+        c.on('data', (data) => {
           buffer = Buffer.concat([buffer, data])
-          if(messageLen === 0) messageLen = shared.getMessageLen([data])
-          if(buffer.length === messageLen + 4) {
-            if(con) {
+          if (messageLen === 0) messageLen = shared.getMessageLen([data])
+          if (buffer.length === messageLen + 4) {
+            if (con) {
               con.write(buffer)
               con.end()
             }
           }
         })
-        c.on('end', function() {
+        c.on('end', () => {
           con = undefined
         })
       }
@@ -157,44 +156,44 @@ exports.stopBuffering = function(test) {
     })
   }, 6*1000)
   // After the server is started, messages will go through as expected
-  setTimeout(function() {
-    tcpTransport.request({id: 'foo'}, function(result) {
+  setTimeout(() => {
+    tcpTransport.request({id: 'foo'}, (result) => {
       test.ok(result instanceof Object, 'got a result')
       test.equal(result.id, 'foo', 'got the expected result')
-      tcpTransport.shutdown(function() {
+      tcpTransport.shutdown(() => {
         server.close(test.done.bind(test))
       })
     })
   }, 8*1000)
 }
 
-exports.dontStopBuffering = function(test) {
+exports.dontStopBuffering = (test) => {
   test.expect(6)
   // This test tests a modification of the above test,
   // if its told to stop buffering after a period of time of
   // being disconnected, but then reconnects *before* that period
   // the stopBuffering code shouldn't interfere with regular requests
-  var server
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23460 }, {
+  let server
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23460 }, {
     timeout: 2*1000,
     stopBufferingAfter: 8*1000
   })
-  tcpTransport.request({id: 'foo'}, function(result) {
+  tcpTransport.request({id: 'foo'}, (result) => {
     test.ok(!!result.error)
     test.equal(result.error, 'Request Timed Out')
   })
-  setTimeout(function() {
-    tcpTransport.request({id: 'foo'}, function(result) {
+  setTimeout(() => {
+    tcpTransport.request({id: 'foo'}, (result) => {
       test.ok(result instanceof Object)
       test.equal(result.id, 'foo')
     })
-    var serverFunc = function(c) {
-      var buffer = new Buffer('')
-      var messageLen = 0
-      c.on('data', function(data) {
+    const serverFunc = (c) => {
+      let buffer = new Buffer('')
+      let messageLen = 0
+      c.on('data', (data) => {
         buffer = Buffer.concat([buffer, data])
-        if(messageLen === 0) messageLen = shared.getMessageLen([data])
-        if(buffer.length === messageLen + 4) {
+        if (messageLen === 0) messageLen = shared.getMessageLen([data])
+        if (buffer.length === messageLen + 4) {
           c.write(buffer)
           c.end()
         }
@@ -203,24 +202,23 @@ exports.dontStopBuffering = function(test) {
     server = net.createServer(serverFunc)
     server.listen(23460)
   }, 6*1000)
-  setTimeout(function() {
-    tcpTransport.request({id: 'foo'}, function(result) {
+  setTimeout(() => {
+    tcpTransport.request({id: 'foo'}, (result) => {
       test.ok(result instanceof Object)
       test.equal(result.id, 'foo')
-      tcpTransport.shutdown(function() {
+      tcpTransport.shutdown(() => {
         server.close(test.done.bind(test))
       })
     })
   }, 10*1000)
 }
 
-exports.reconnect = function(test) {
+exports.reconnect = async (test) => {
   test.expect(4)
-  var tcpServer
 
-  var tcpClient
-
-  var sendRequest = function (done) {
+  let tcpServer
+  let tcpClient
+  const sendRequest = () => new Promise((resolve) => {
     if (!tcpClient) {
       tcpClient = new Client(new ClientTcp({ host: 'localhost', port: 23458 }, {
         stopBufferingAfter: 30*1000,
@@ -229,102 +227,100 @@ exports.reconnect = function(test) {
       }))
       tcpClient.register('loopback')
     }
-    tcpClient.loopback({'id': 'foo'}, function(err, result) {
+    tcpClient.loopback({'id': 'foo'}, (err, result) => {
       // eslint-disable-next-line no-console
       console.log('got response')
       // eslint-disable-next-line no-console
       console.dir(arguments)
       test.equal(JSON.stringify({'id': 'foo'}), JSON.stringify(result), 'received the response')
-      done()
+      resolve()
     })
-  }
+  })
 
-  var createServer = function (done) {
+  const createServer = () => new Promise((resolve) => {
     // eslint-disable-next-line no-console
     console.log('create server')
     tcpServer = new Server(new ServerTcp(23458), {
-      loopback: function(arg, callback) { callback(null, arg) }
-    }, done)
-    tcpServer.transport.on('listening', done)
-  }
-  var killServer = function (done) {
+      loopback: (arg, callback) => callback(null, arg),
+    })
+    tcpServer.transport.on('listening', resolve)
+  })
+  const killServer = () => new Promise((resolve) => {
     // eslint-disable-next-line no-console
     console.log('kill server')
-    tcpServer.shutdown(done)
-  }
+    tcpServer.shutdown(resolve)
+  })
 
-  async.series([
-    //sendRequest,
-    function(done) { setTimeout(done, Math.random() * 5000) },
-    createServer,
-    sendRequest,
-    killServer,
-    function(done) { setTimeout(done, Math.random() * 5000) },
-    createServer,
-    sendRequest,
-    killServer,
-    function(done) { setTimeout(done, Math.random() * 5000) },
-    createServer,
-    sendRequest,
-    killServer,
-    function(done) { setTimeout(done, Math.random() * 5000) },
-    createServer,
-    sendRequest,
-    killServer
-  ], function (err) {
+  const wait = (sec) => new Promise((resolve) => setTimeout(() => resolve(), sec * 1000))
+
+  try {
+    await wait(Math.random() * 5)
+    await createServer()
+    await sendRequest()
+    await killServer()
+    await wait(Math.random() * 5)
+    await createServer()
+    await sendRequest()
+    await killServer()
+    await wait(Math.random() * 5)
+    await createServer()
+    await sendRequest()
+    await killServer()
+    await wait(Math.random() * 5)
+    await createServer()
+    await sendRequest()
+    await killServer()
+  } catch (err) {
     // eslint-disable-next-line no-console
     console.dir(err)
     tcpClient.shutdown()
     test.done()
-  })
-
+  }
+  tcpClient.shutdown()
+  test.done()
 }
 
-exports.nullresponse = function(test) {
+exports.nullresponse = (test) => {
   test.expect(1)
-  var server = net.createServer(function(con) {
-    con.end()
-  })
+  const server = net.createServer((con) => con.end())
   server.listen(23456)
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
     // eslint-disable-next-line no-console
     logger: console.log,
     reconnects: 1
   })
-  setTimeout(function() {
+  setTimeout(() => {
     test.equal(tcpTransport.con, undefined, 'should not have a connection')
-    tcpTransport.shutdown(function() {
+    tcpTransport.shutdown(() => {
       server.close(test.done.bind(test))
     })
   }, 100)
 }
 
-exports.reconnectclearing = function(test) {
+exports.reconnectclearing = (test) => {
   test.expect(2)
-  var server = net.createServer(function(con) {
-    con.end()
-  })
+  let server = net.createServer((con) => con.end())
   server.listen(23456)
 
-  var tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
+  const tcpTransport = new TcpTransport({ host: 'localhost', port: 23456 }, {
     // eslint-disable-next-line no-console
     logger: console.log,
     reconnects: 1,
     reconnectClearInterval: 110
   })
 
-  setTimeout(function() {
+  setTimeout(() => {
     test.equal(tcpTransport.con, undefined, 'should not have a connection')
 
     // Pretend the service came back to life
-    server.close(function() {
+    server.close(() => {
       server = net.createServer()
       server.listen(23456)
 
-      setTimeout(function() {
+      setTimeout(() => {
         test.ok(tcpTransport.con, 'should have a connection')
 
-        tcpTransport.shutdown(function() {
+        tcpTransport.shutdown(() => {
           server.close(test.done.bind(test))
         })
       }, 100)

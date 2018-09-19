@@ -1,33 +1,33 @@
-var jsonrpc = require('../lib/index')
-var HttpTransport = jsonrpc.transports.client.http
-var http = require('http')
+const jsonrpc = require('../lib/index')
+const HttpTransport = jsonrpc.transports.client.http
+const http = require('http')
 
-exports.loopback = function(test) {
+exports.loopback = (test) => {
   test.expect(3)
-  var server = http.createServer(function(req, res) {
+  const server = http.createServer(function(req, res) {
     test.equal('authToken', req.headers.authorization, 'authorization header received')
     test.equal('thing', req.headers.other, 'other header received')
 
-    var buffer = ''
+    let buffer = ''
     req.setEncoding('utf8')
-    req.on('data', function(data) {
+    req.on('data', (data) => {
       buffer += data
     })
-    req.on('end', function() {
+    req.on('end', () => {
       res.write(buffer)
       res.end()
     })
   })
-  server.listen(12345, 'localhost', function() {
-    var options = {
+  server.listen(12345, 'localhost', () => {
+    const options = {
       headers: {
         authorization: 'authToken',
         other: 'thing'
       }
     }
 
-    var httpTransport = new HttpTransport('localhost', 12345, options)
-    httpTransport.request('foo', function(result) {
+    const httpTransport = new HttpTransport('localhost', 12345, options)
+    httpTransport.request('foo', (result) => {
       test.equal('foo', result, 'loopback works correctly')
       server.close()
       test.done()
